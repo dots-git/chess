@@ -45,7 +45,12 @@ def circular_exponential(value, change_rate, target, acceleration, acceleration_
             change_rate = acceleration_modifier * math.tan(math.atan(change_rate / acceleration_modifier) + acceleration * delta_time)
         else:
             change_rate += change_rate - acceleration_modifier * math.tan(math.atan(change_rate / acceleration_modifier) - acceleration * delta_time)
+        
         moving_twd = value - change_rate / math.log(drag)
+
+        if moving_twd > target + 0.01:
+            change_rate = (value - target) * math.log(drag)
+            moving_twd = value - change_rate / math.log(drag)
     
     # Slow down if that way you reach target precisely
     if approx(moving_twd, target, 0.01):
