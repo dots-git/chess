@@ -27,7 +27,7 @@ class component():
         pass
 
 class transform(component):
-    position: Vector2 = Vector2(0, 0)
+    position: Vector2 = Vector2(100, 100)
     scale: Vector2 = Vector2(1, 1)
 
     def set_scale(self, scale: Vector2):
@@ -95,10 +95,12 @@ class sprite(component):
 
 
 class game_object():
+
     def __init__(self):
         self.components = []
+        self.is_active = False
     
-    def append_component(self, comp: component):
+    def append_component(self, comp: type):
         comp_instance = comp(self)
         self.components.append(comp_instance)
     
@@ -107,6 +109,12 @@ class game_object():
             if isinstance(comp, type):
                 return comp
     
+    def set_active(self, is_active, call_start = False):
+        self.is_active = is_active
+        if call_start:
+            for comp in self.components:
+                comp.start()
+
     @staticmethod
     def instantiate(prefab: 'game_object'):
         deepcopy_debug_data = []
