@@ -5,8 +5,7 @@ from base_components import *
 import math
 import utility.anim as anim
 from copy import copy
-from utility.input import input
-
+from utility.events import input, window
 
 START_TIME = time.time()
 
@@ -144,8 +143,6 @@ class piece(component):
                 self.transform.scale[0] = math.pow(current_scale, 2)
                 self.transform.scale[1] = math.pow(current_scale, 2)
 
-        pygame.draw.circle(screen, pygame.Color(255, 255, 255), (input.mouse_pos.x, input.mouse_pos.y), 3)
-
 WIDTH = 1200
 HEIGHT = 700
 
@@ -188,12 +185,14 @@ for comp in component_manager.all_components:
 
 test = game_object.instantiate(piece_prefab)
 test.get_component(piece).set_piece('wp')
+test.name = 'Test'
 
 piece_prefab.get_component(piece).set_piece('None')
 
 ## Game loop
 running = True
 while running:
+    window.on_tick()
     input.on_tick()
 
     events = pygame.event.get()
@@ -203,7 +202,6 @@ while running:
         ## listening for the the X button at the top
         if event.type == pygame.QUIT:
             running = False
-    
 
     #3 Draw/render
     screen.fill(BLACK)
@@ -212,6 +210,13 @@ while running:
     
     for comp in component_manager.all_components:
         comp.on_tick(delta)
+
+    component_manager.sort_sprites()
+    for spr in component_manager.all_sprites:
+        screen.blit(spr.image, (
+            spr.transform.position.x - spr.transform.scale.x * spr.scale.x / 2, 
+            spr.transform.position.y - spr.transform.scale.y * spr.scale.y / 2
+        ))
 
     ## Done after drawing everything to the screen
     pygame.display.flip()   

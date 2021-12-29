@@ -1,10 +1,7 @@
-from typing import List
+from pygame import Vector2
 
+def to_tuple(vec: Vector2):
+    return (vec.x, vec.y)
 
-def move(list: List, amount: int = 1) -> List:
-    if amount < 0:
-        for i in range(amount, len(list)):
-            list[i+amount] = list[i]
-    else:
-        for i in range(len(list)):
-            list[len(list)-1-i+amount] = list[len(list)-1-i]
+def vec(i: int) -> Vector2:
+    return Vector2(i, i)

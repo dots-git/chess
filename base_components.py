@@ -2,14 +2,39 @@ import pygame
 from pygame import Vector2
 from copy import deepcopy
 
+class layer():
+    BACKGROUND = -1
+    BASE = 0
+    BOARD = 1
+    STILL_PIECES = 2
+    MOVING_PIECES = 3
+    UI = 4
+
 class component_manager():
     all_components: 'list[component]' = []
+    all_sprites: 'list[sprite]' = []
+    
+    @staticmethod
+    def sort_sprites():
+        for i in range(1, len(component_manager.all_sprites)):
+            key = component_manager.all_sprites[i]
+
+            j = i - 1
+            while j >= 0 and (
+                (
+                    component_manager.all_sprites[j].z_layer == key.z_layer and 
+                    component_manager.all_sprites[j].z_order > key.z_order
+                ) or (
+                    component_manager.all_sprites[j].z_layer > key.z_layer
+                )):
+                component_manager.all_sprites[j + 1] = component_manager.all_sprites[j] 
+                j -= 1
+            component_manager.all_sprites[j + 1] = key
 
 class component():
     def __init__(self, parent):
         self.parent: game_object = parent
         component_manager.all_components.append(self)
-        print("Added component")
     
     def set_parent(self, parent):
         self.parent = parent
@@ -24,6 +49,9 @@ class component():
         pass
 
     def restore_after_deepcopy(self, debug_data):
+        pass
+
+    def run_if_clone(self):
         pass
 
 class transform(component):
@@ -47,6 +75,8 @@ class rigidbody(component):
         self.transform.position += self.velocity * delta
 
 class sprite(component):
+    z_layer: int = layer.BASE
+    z_order: int = 0
     og_image = pygame.Surface((0, 0))
     image = pygame.Surface((0, 0))
     scale = Vector2(1, 1)
@@ -67,6 +97,7 @@ class sprite(component):
     
     def start(self):
         self.transform = self.parent.get_component(transform)
+        component_manager.all_sprites.append(self)
 
     def on_tick(self, delta: float):
         if self.image.get_size() is not (int(self.scale.x * self.transform.scale.x), int(self.scale.y * self.transform.scale.y)):
@@ -77,13 +108,11 @@ class sprite(component):
                     int(self.scale.y * self.transform.scale.y)
                 )
             )
-        pygame.display.get_surface().blit(self.image, (
-            self.transform.position.x - self.scale.x * self.transform.scale.x / 2, 
-            self.transform.position.y - self.scale.x * self.transform.scale.x / 2
-        ))
+    
+    # def draw(self):
+    #     pygame.display.get_surface().blit(self.image, (self.transform.position.))
     
     def prepare_for_deepcopy(self):
-
         temp = {'og_image': self.og_image, 'image': self.image}
         self.image = None
         self.og_image = None
@@ -92,13 +121,16 @@ class sprite(component):
     def restore_after_deepcopy(self, debug_data):
         self.og_image = debug_data['og_image'].copy()
         self.image = debug_data['image'].copy()
+    
+    def run_if_clone(self):
+        component_manager.all_sprites.append(self)
 
 
 class game_object():
-
-    def __init__(self):
+    def __init__(self, name = 'New Game Object'):
         self.components = []
         self.is_active = False
+        self.name = name
     
     def append_component(self, comp: type):
         comp_instance = comp(self)
@@ -127,6 +159,7 @@ class game_object():
             # Restore things like surfaces after cloning
             prefab.components[i].restore_after_deepcopy(deepcopy_debug_data[i])
             instance.components[i].restore_after_deepcopy(deepcopy_debug_data[i])
+            instance.components[i].run_if_clone()
 
             component_manager.all_components.append(instance.components[i])
             # print(type(comp))
