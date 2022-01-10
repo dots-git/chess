@@ -1,12 +1,14 @@
 import pygame
+from pygame.math import Vector2
+import utility.utils as utils
 
 class window():
     just_resized = True
-    scale = (0, 0)
-    scale_last_frame = (0, 0)
+    scale = Vector2(0, 0)
+    scale_last_frame = Vector2(0, 0)
 
     def on_tick():
-        window.scale = pygame.display.get_surface().get_size()
+        window.scale = utils.vec(pygame.display.get_surface().get_size())
         window.just_resized = window.scale != window.scale_last_frame
             
         window.scale_last_frame = window.scale

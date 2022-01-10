@@ -40,6 +40,8 @@ def circular_exponential(value, change_rate, target, acceleration, acceleration_
             change_rate = acceleration_modifier * math.tan(math.atan(change_rate / acceleration_modifier) + acceleration * delta_time)
         else:
             change_rate += change_rate - acceleration_modifier * math.tan(math.atan(change_rate / acceleration_modifier) - acceleration * delta_time)
+            if change_rate < 0:
+                change_rate = (value - target) * math.log(drag)
         moving_twd = value - change_rate / math.log(drag)
     
     # Cap change_rate if it is too big

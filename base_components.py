@@ -1,6 +1,7 @@
 import pygame
 from pygame import Vector2
 from copy import deepcopy
+from utility.utils import *
 
 class layer():
     BACKGROUND = -1
@@ -42,7 +43,13 @@ class component():
     def start(self):
         pass
 
+    def secondary_start(self):
+        pass
+
     def on_tick(self, delta: float):
+        pass
+
+    def refresh_config(self):
         pass
 
     def prepare_for_deepcopy(self):
@@ -100,17 +107,14 @@ class sprite(component):
         component_manager.all_sprites.append(self)
 
     def on_tick(self, delta: float):
-        if self.image.get_size() is not (int(self.scale.x * self.transform.scale.x), int(self.scale.y * self.transform.scale.y)):
-            self.image = pygame.transform.scale(
+        if not (approx(self.image.get_size()[0], int(self.scale.x * self.transform.scale.x), 0.05) and approx(self.image.get_size()[1], int(self.scale.y * self.transform.scale.y), 0.05)):
+            self.image = pygame.transform.smoothscale(
                 self.og_image, 
                 (
                     int(self.scale.x * self.transform.scale.x), 
                     int(self.scale.y * self.transform.scale.y)
                 )
             )
-    
-    # def draw(self):
-    #     pygame.display.get_surface().blit(self.image, (self.transform.position.))
     
     def prepare_for_deepcopy(self):
         temp = {'og_image': self.og_image, 'image': self.image}
@@ -146,9 +150,20 @@ class game_object():
         if call_start:
             for comp in self.components:
                 comp.start()
+    
+    def remove(self):
+        for comp in self.components:
+            component_manager.all_components.remove(comp)
+            if type(comp) == sprite:
+                component_manager.all_sprites.remove(comp)
+        
+        self.components.clear()
+        
 
     @staticmethod
     def instantiate(prefab: 'game_object'):
+        print("Instantiating {}".format(prefab.name))
+
         deepcopy_debug_data = []
         for comp in prefab.components:
             # Prepare for deepcopy. Nessesary because some objects like pygame surfaces can't be pickled. WHY?!?!?!
